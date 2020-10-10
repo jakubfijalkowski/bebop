@@ -15,6 +15,6 @@ struct VideoData {
 
 message MediaMessage {
   VideoCodec codec = 0; 
-  string friendlyName = 1 [deprecated('no longer required')];
+  string friendlyName = 1 [deprecated("no longer required")];
   VideoData data = 2;
 }
