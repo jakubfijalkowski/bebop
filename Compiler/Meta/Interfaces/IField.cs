@@ -46,5 +46,15 @@
         ///     It will be zero for <see cref="AggregateKind.Struct"/>.
         /// </remarks>
         public int ConstantValue { get; }
+
+        /// <summary>
+        ///     Is this field's type a scalar type?
+        /// </summary>
+        public bool IsScalar { get => TypeCode < 0; }
+
+        /// <summary>
+        ///     Is this field's type an aggregate type?
+        /// </summary>
+        public bool IsAggregate { get => TypeCode >= 0; }
     }
 }

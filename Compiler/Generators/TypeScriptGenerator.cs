@@ -19,7 +19,7 @@ namespace Compiler.Generators
         /// <returns>The generated TypeScript <c>encode</c> function body.</returns>
         public string CompileEncode(IDefinition definition)
         {
-            
+
 
             var builder = new StringBuilder();
             builder.AppendLine("      var source = !view;");
@@ -39,13 +39,13 @@ namespace Compiler.Generators
                 }
                 if (field.IsArray)
                 {
-                    if ((ScalarType) field.TypeCode == ScalarType.Byte)
+                    if ((ScalarType)field.TypeCode == ScalarType.Byte)
                     {
                         builder.AppendLine($"        view.writeBytes(message.{field.Name.ToCamelCase()});");
                     }
                     else
                     {
-                       
+
                         builder.AppendLine($"        view.writeUint(message.{field.Name.ToCamelCase()}.length);");
                         builder.AppendLine($"        for (var i = 0; i < message.{field.Name.ToCamelCase()}.length; i++) {{");
                         builder.AppendLine($"          {code}");
@@ -70,7 +70,7 @@ namespace Compiler.Generators
             }
             builder.AppendLine("");
             builder.AppendLine("      if (source) return view.toArray();");
-         
+
             return builder.ToString();
         }
 
@@ -94,11 +94,12 @@ namespace Compiler.Generators
                 builder.AppendLine("          case 0:");
                 builder.AppendLine("            return message;");
                 builder.AppendLine("");
-            } else if (definition.Kind == AggregateKind.Struct)
+            }
+            else if (definition.Kind == AggregateKind.Struct)
             {
                 builder.AppendLine($"      var message: I{definition.Name} = {{");
             }
-            var indent  = definition.Kind switch
+            var indent = definition.Kind switch
             {
                 AggregateKind.Struct => "      ",
                 AggregateKind.Message => "            ",
@@ -106,9 +107,9 @@ namespace Compiler.Generators
             };
             foreach (var field in definition.Fields)
             {
-
+                var name = field.Name.ToCamelCase();
                 var code = GetReadCode(field);
-                
+
                 if (definition.Kind == AggregateKind.Message)
                 {
                     builder.AppendLine($"          case {field.ConstantValue}:");
@@ -117,7 +118,7 @@ namespace Compiler.Generators
                 {
                     if (field.DeprecatedAttribute.HasValue)
                     {
-                        if ((ScalarType) field.TypeCode == ScalarType.Byte)
+                        if ((ScalarType)field.TypeCode == ScalarType.Byte)
                         {
                             builder.AppendLine($"      view.readBytes();");
                         }
@@ -133,11 +134,11 @@ namespace Compiler.Generators
                         {
                             if (definition.Kind == AggregateKind.Struct)
                             {
-                                builder.AppendLine($"          {field.Name.ToCamelCase()}: view.readBytes(),");
+                                builder.AppendLine($"          {name}: view.readBytes(),");
                             }
                             else
                             {
-                                builder.AppendLine($"{indent}message.{field.Name.ToCamelCase()} = view.readBytes();");
+                                builder.AppendLine($"{indent}message.{name} = view.readBytes();");
                             }
 
                         }
@@ -145,7 +146,7 @@ namespace Compiler.Generators
                         {
                             if (definition.Kind == AggregateKind.Struct)
                             {
-                                builder.AppendLine($"          {field.Name.ToCamelCase()}: (");
+                                builder.AppendLine($"          {name}: (");
                                 builder.AppendLine($"               () => {{");
                                 builder.AppendLine($"                   let length = view.readUint();");
                                 builder.AppendLine($"                   const collection = new Array<{GetTsType(field, false)}>(length);");
@@ -157,8 +158,8 @@ namespace Compiler.Generators
                             else
                             {
                                 builder.AppendLine($"{indent}let length = view.readUint();");
-                                builder.AppendLine($"{indent}message.{field.Name.ToCamelCase()} = new Array<{GetTsType(field, false)}>(length);");
-                                builder.AppendLine($"{indent}for (var i = 0; i < length; i++) message.{field.Name.ToCamelCase()}[i] = {code};");
+                                builder.AppendLine($"{indent}message.{name} = new Array<{GetTsType(field, false)}>(length);");
+                                builder.AppendLine($"{indent}for (var i = 0; i < length; i++) message.{name}[i] = {code};");
                             }
 
                         }
@@ -174,13 +175,13 @@ namespace Compiler.Generators
                     {
                         if (definition.Kind == AggregateKind.Struct)
                         {
-                            builder.AppendLine($"          {field.Name.ToCamelCase()}: {code},");
+                            builder.AppendLine($"          {name}: {code},");
                         }
                         else
                         {
-                            builder.AppendLine($"{indent}message.{field.Name.ToCamelCase()} = {code};");
+                            builder.AppendLine($"{indent}message.{name} = {code};");
                         }
-                        
+
                     }
                 }
 
@@ -221,9 +222,9 @@ namespace Compiler.Generators
         /// <returns>The generated "write" call.</returns>
         string GetWriteCode(IField field)
         {
-            var method = field.TypeCode switch 
+            var method = field.TypeCode switch
             {
-                _ when field.TypeCode < 0 => (ScalarType)field.TypeCode switch
+                _ when field.IsScalar => (ScalarType)field.TypeCode switch
                 {
                     ScalarType.Bool => "writeByte",
                     ScalarType.Byte => "writeByte",
@@ -237,7 +238,7 @@ namespace Compiler.Generators
                 _ => _schema.Definitions.ElementAt(field.TypeCode) switch
                 {
                     var f when f.Kind == AggregateKind.Enum => "writeEnum",
-                    _  => "encode",
+                    _ => "encode",
                 },
             };
             var index = field.IsArray ? "[i]" : "";
@@ -258,7 +259,7 @@ namespace Compiler.Generators
         {
             var code = field.TypeCode switch
             {
-                _ when field.TypeCode < 0 => (ScalarType)field.TypeCode switch
+                _ when field.IsScalar => (ScalarType)field.TypeCode switch
                 {
                     ScalarType.Bool => "!!view.readByte()",
                     ScalarType.Byte => "view.readByte()",
@@ -386,7 +387,7 @@ namespace Compiler.Generators
             }
             builder.AppendLine("");
 
-            
+
             return builder.ToString().TrimEnd();
         }
     }
