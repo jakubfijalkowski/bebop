@@ -117,7 +117,8 @@ namespace Core.Generators.CSharp
                         if (definition.IsStruct())
                         {
                             builder.AppendLine("[System.Diagnostics.CodeAnalysis.NotNull, System.Diagnostics.CodeAnalysis.DisallowNull]");
-                        } else if (definition.IsMessage())
+                        }
+                        else if (definition.IsMessage())
                         {
                             builder.AppendLine(
                                 "[System.Diagnostics.CodeAnalysis.MaybeNull, System.Diagnostics.CodeAnalysis.AllowNull]");
@@ -141,7 +142,20 @@ namespace Core.Generators.CSharp
                     builder.AppendLine("/// <inheritdoc />");
                     builder.AppendLine(GeneratedAttribute);
                     builder.AppendLine(RecordAttribute);
-                    builder.AppendLine($"public sealed class {definitionName} : {baseName} {{");
+
+                    if (definition.AuthorizeWhenHasAnyOfAttribute is not null)
+                    {
+                        builder.AppendLine($"[AuthorizeWhenHasAnyOf({definition.AuthorizeWhenHasAnyOfAttribute.Value})]");
+                    }
+
+                    var baseInterface = (definition.QueryAttribute, definition.CommandAttribute) switch
+                    {
+                        var (q, _) when q is not null => $", IRemoteQuery<{q.Value}>",
+                        var (_, c) when c is not null => ", IRemoteCommand",
+                        _ => string.Empty,
+                    };
+
+                    builder.AppendLine($"public sealed class {definitionName} : {baseName}{baseInterface} {{");
                     builder.Indent(indentStep);
                     builder.AppendLine(CompileEncodeHelper(definition, "byte[]", "Encode"));
                     builder.AppendLine();
@@ -220,7 +234,7 @@ namespace Core.Generators.CSharp
             builder.Dedent(indentStep);
             builder.AppendLine("}");
 
-            if (definition is not {Fields: {Count: 0}})
+            if (definition is not { Fields: { Count: 0 } })
             {
                 var returnStatement = new StringBuilder("return");
                 for (var i = 0; i < definition.Fields.Count; i++)
@@ -336,7 +350,7 @@ namespace Core.Generators.CSharp
                     BaseType.Date => "System.DateTime",
                     _ => throw new ArgumentOutOfRangeException(st.BaseType.ToString())
                 },
-                ArrayType {MemberType: ScalarType {BaseType: BaseType.Byte}} at =>
+                ArrayType { MemberType: ScalarType { BaseType: BaseType.Byte } } at =>
                     $"ImmutableArray<{TypeName(at.MemberType)}>",
                 ArrayType at =>
                     $"{(at.MemberType is ArrayType ? ($"{TypeName(at.MemberType, arraySizeVar)}[]") : $"{TypeName(at.MemberType)}[{arraySizeVar}]")}",
@@ -488,7 +502,7 @@ namespace Core.Generators.CSharp
                 },
                 DefinedType dt when Schema.Definitions[dt.Name].Kind == AggregateKind.Enum =>
                     $"{target} = reader.ReadEnum<{dt.Name}>();",
-                DefinedType dt => 
+                DefinedType dt =>
                     $"{target} = {(string.IsNullOrWhiteSpace(Schema.Namespace) ? string.Empty : $"{Schema.Namespace.ToPascalCase()}.")}{dt.Name.ToPascalCase()}.DecodeFrom(ref reader);",
                 _ => throw new InvalidOperationException($"CompileDecodeField: {type}")
             };
@@ -627,7 +641,7 @@ namespace Core.Generators.CSharp
         {
             return type switch
             {
-                ScalarType { BaseType: BaseType.String }  => false,
+                ScalarType { BaseType: BaseType.String } => false,
                 DefinedType dt when IsEnum(dt) => true,
                 DefinedType => false,
                 ScalarType => true,

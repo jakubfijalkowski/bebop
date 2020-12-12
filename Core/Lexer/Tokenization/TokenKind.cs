@@ -40,12 +40,6 @@ namespace Core.Lexer.Tokenization
         Deprecated,
 
         /// <summary>
-        ///     The 'opcode' keyword which is reserved by the compiler
-        /// </summary>
-        [Keyword("opcode")]
-        Opcode,
-
-        /// <summary>
         ///     The 'map' keyword which is reserved by the compiler
         /// </summary>
         [Keyword("map")]

@@ -36,6 +36,9 @@ namespace Core.Meta.Interfaces
         public string Documentation { get; }
 
         public BaseAttribute? OpcodeAttribute { get; }
+        public BaseAttribute? CommandAttribute { get; }
+        public BaseAttribute? QueryAttribute { get; }
+        public BaseAttribute? AuthorizeWhenHasAnyOfAttribute { get; }
     }
 
     public static class DefinitionExtensions

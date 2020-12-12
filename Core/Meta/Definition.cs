@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Core.Lexer.Tokenization.Models;
 using Core.Meta.Attributes;
 using Core.Meta.Interfaces;
@@ -13,7 +14,7 @@ namespace Core.Meta
             AggregateKind kind,
             ICollection<IField> fields,
             string documentation,
-            BaseAttribute? opcodeAttribute)
+            IReadOnlyList<BaseAttribute> customAttributes)
         {
             Name = name;
             IsReadOnly = isReadOnly;
@@ -21,7 +22,7 @@ namespace Core.Meta
             Kind = kind;
             Fields = fields;
             Documentation = documentation;
-            OpcodeAttribute = opcodeAttribute;
+            CustomAttributes = customAttributes;
         }
 
         public string Name { get; }
@@ -30,6 +31,11 @@ namespace Core.Meta
         public bool IsReadOnly { get; }
         public ICollection<IField> Fields { get; }
         public string Documentation { get; }
-        public BaseAttribute? OpcodeAttribute { get; }
+        public IReadOnlyList<BaseAttribute> CustomAttributes { get; }
+
+        public BaseAttribute? OpcodeAttribute => CustomAttributes.FirstOrDefault(a => a is OpcodeAttribute);
+        public BaseAttribute? CommandAttribute => CustomAttributes.FirstOrDefault(a => a is CommandAttribute);
+        public BaseAttribute? QueryAttribute => CustomAttributes.FirstOrDefault(a => a is QueryAttribute);
+        public BaseAttribute? AuthorizeWhenHasAnyOfAttribute => CustomAttributes.FirstOrDefault(a => a is AuthorizeWhenHasAnyOfAttribute);
     }
 }

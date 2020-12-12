@@ -21,7 +21,7 @@ namespace Core.Generators.TypeScript
             builder.Indent(spaces);
             builder.AppendLine("/**");
             builder.Indent(1);
-            foreach (var line in documentation.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None))
+            foreach (var line in documentation.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None))
             {
                 builder.AppendLine($"* {line}");
             }
@@ -60,7 +60,7 @@ namespace Core.Generators.TypeScript
         }
 
         private string CompileEncodeMessage(IDefinition definition)
-        { 
+        {
             var builder = new IndentedStringBuilder(6);
             builder.AppendLine($"const pos = view.reserveMessageLength();");
             builder.AppendLine($"const start = view.length;");
@@ -185,7 +185,7 @@ namespace Core.Generators.TypeScript
             builder.AppendLine("}");
             return builder.ToString();
         }
-        
+
         private string CompileDecodeStruct(IDefinition definition)
         {
             var builder = new IndentedStringBuilder(6);
@@ -312,7 +312,7 @@ namespace Core.Generators.TypeScript
 
             foreach (var definition in Schema.Definitions.Values)
             {
-                if(!string.IsNullOrWhiteSpace(definition.Documentation))
+                if (!string.IsNullOrWhiteSpace(definition.Documentation))
                 {
                     builder.AppendLine(FormatDocumentation(definition.Documentation, string.Empty, 0));
                 }
@@ -326,7 +326,8 @@ namespace Core.Generators.TypeScript
                         if (!string.IsNullOrWhiteSpace(field.Documentation))
                         {
                             builder.AppendLine(FormatDocumentation(field.Documentation, deprecationReason, 2));
-                        } else if (string.IsNullOrWhiteSpace(field.Documentation) && !string.IsNullOrWhiteSpace(deprecationReason))
+                        }
+                        else if (string.IsNullOrWhiteSpace(field.Documentation) && !string.IsNullOrWhiteSpace(deprecationReason))
                         {
                             builder.AppendLine(FormatDeprecationDoc(deprecationReason, 2));
                         }
@@ -338,7 +339,14 @@ namespace Core.Generators.TypeScript
 
                 if (definition.Kind == AggregateKind.Message || definition.Kind == AggregateKind.Struct)
                 {
-                    builder.AppendLine($"export interface I{definition.Name} {{");
+                    var baseInterface = (definition.QueryAttribute, definition.CommandAttribute) switch
+                    {
+                        var (q, _) when q is not null => $" extends IRemoteQuery<{q.Value}>",
+                        var (_, c) when c is not null => " extends IRemoteCommand",
+                        _ => string.Empty,
+                    };
+
+                    builder.AppendLine($"export interface I{definition.Name}{baseInterface} {{");
                     for (var i = 0; i < definition.Fields.Count; i++)
                     {
                         var field = definition.Fields.ElementAt(i);

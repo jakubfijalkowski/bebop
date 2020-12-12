@@ -19,7 +19,7 @@ namespace Core.Exceptions
     [Serializable]
     public class SpanException : Exception
     {
-       
+
         public Span Span { get; }
         /// <summary>
         /// A unique error code identifying the type of exception
@@ -61,7 +61,8 @@ namespace Core.Exceptions
     {
         public UnexpectedTokenException(TokenKind expectedKind, Token token, string? hint = null)
             : base($"Expected {expectedKind}, but found '{token.Lexeme}' of kind {token.Kind}."
-                + (string.IsNullOrWhiteSpace(hint) ? "" : $" (Hint: {hint})"), token.Span, 104) { }
+                + (string.IsNullOrWhiteSpace(hint) ? "" : $" (Hint: {hint})"), token.Span, 104)
+        { }
     }
     [Serializable]
     class UnrecognizedTypeException : SpanException
@@ -109,5 +110,12 @@ namespace Core.Exceptions
     {
         public InvalidMapKeyTypeException(TypeBase type)
             : base($"Type '{type.AsString}' is an invalid key type for a map. Only booleans, numbers, strings, and GUIDs can be used as keys.", type.Span, 111) { }
+    }
+
+    [Serializable]
+    class UnknownAttributeException : SpanException
+    {
+        public UnknownAttributeException(string kind, Token token)
+            : base($"Attribute named {kind} is not known.", token.Span, 111) { }
     }
 }
