@@ -1,0 +1,21 @@
+enum RoleName {
+    User = 0;
+    Admin = 1;
+}
+
+struct MeDTO {
+    guid Id;
+    string FirstName;
+    string LastName;
+}
+
+[query("MeDTO")]
+[authorizeWhenHasAnyOf("profile")]
+message Me { }
+
+[command]
+[authorizeWhenHasAnyOf("profile,update_profile")]
+message ChangeName {
+    1 -> string NewFirstName;
+    2 -> string NewLastName;
+}
